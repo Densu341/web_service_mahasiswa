@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Mahasiswa</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+	<div class="container mb-5">
+		<div class="row">
+			<div class="col-12">
+				<a href="../crud_ajax_fk/fakultas.html" class="btn btn-link">Fakultas</a>
+				<a href="../crud_ajax_prodi/prodi.html" class="btn btn-link">Prodi</a>
+				<a href="mahasiswa.html" class="btn btn-link">Mahasiswa</a>
+			</div>
+		</div>
+	</div>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-3">
+				<div class="card">
+					<div class="card-header">
+						<h3>Form Mahasiswa</h3>
+					</div>
+				</div>
+				<div class="card-body">
+					<form id="form-mahasiswa">
+						<div class="mb-2">
+						    <label class="form-label">ID Prodi</label>
+						    <select name="prodi_id" class="form-select" required>
+						    	<option value="">Pilih Prodi</option>
+						    </select>
+						 </div>
+						<div class="mb-2">
+						    <label class="form-label">NIM</label>
+						    <input name="nim" class="form-control" required>
+						 </div>
+						<div class="mb-2">
+						    <label class="form-label">Nama Mahasiswa</label>
+						    <input name="nama" class="form-control" required>
+						</div>
+						<div class="mb-2">
+						    <label class="form-label">Alamat</label>
+						    <input name="alamat" class="form-control" required>
+						</div>
+						<div class="mb-2">
+						    <label class="form-label">No. HP</label>
+						    <input name="telp" class="form-control" required>
+						</div>
+						<div class="mb-2">
+							<button type="submit" class="btn btn-primary">Submit</button>
+						  </div>
+					</form>
+				</div>
+			</div>
+			<div class="col-9">
+				<div class="card">
+					<div class="card-header">
+						<h3>Tabel Mahasiswa</h3>
+					</div>
+					<div class="card-body">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>NIM</th>
+									<th>Nama Prodi</th>
+									<th>Nama Mahasiswa</th>
+									<th>Alamat</th>
+									<th>No. HP</th>
+									<th>Aksi</th>
+								</tr>
+							</thead>
+							<tbody id="table-mhs"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+	<script type="text/javascript">
+		//ketik dibawah ini
+		var form = 'create'
+
+		$(document).ready(function(e){
+			getProdi()
+			getMhs()
+		})
+
+		function getProdi()
+		{
+			$.ajax({
+				url : '../crud_ajax_prodi/prodi.php'
+			}).then(function(xhr){
+				if (xhr) {
+					option = ``
+					$.each(xhr, function(index, item){
+						option += `<option value="${item.prodi_id}">${item.nama_prodi}</option>`
+					})
+					$("select[name='prodi_id']").append(option)
+				}
+			})
+		}
+
+		function getMhs()
+		{
+			$.ajax({
+				url : 'mahasiswa.php'
+			}).then(function(xhr){
+				if(xhr){
+					tr = ``
+					$.each(xhr, function(index, item){
+						tr +=`
+							 	<tr>
+							 		<td>${item.nim}</td>
+							 		<td>${item.nama_prodi}</td>
+							 		<td>${item.nama}</td>
+							 		<td>${item.alamat}</td>
+							 		<td>${item.telp}</td>
+							 		<td>
+										<button class="btn btn-warning edit" data-prodi_id="${item.prodi_id}" data-nim="${item.nim}" data-nama="${item.nama}" data-alamat="${item.alamat}" data-telp="${item.telp}">Edit</button>
+										<button class="btn btn-danger delete" data-nim="${item.nim}">Delete</button>
+									</td>
+							 	</tr>
+							 `
+					})
+					$("#table-mhs").html(tr)
+				}
+			})
+		}
+
+		$(document).on('submit','#form-mahasiswa',function(e){
+			e.preventDefault()
+			$.ajax({
+				url :(form == 'create')?'create_mahasiswa.php':'update_mahasiswa.php',
+				type : 'POST',
+				processData: false,
+				data : $("#form-mahasiswa").serialize()
+			}).then(function(xhr){
+				if(xhr){
+					if(form == 'update'){
+						$("select[name='prodi_id']").val('').trigger('change')
+						$("input[name='nim']").val('')
+						$("input[name='nama']").val('')
+						$("input[alamat='alamat']").val('')
+						$("input[telp='telp']").val('')
+						form = 'create'
+					}
+					getMhs()
+				}
+			})
+		})
+
+		$(document).on('click','.edit',function(e){
+			form = 'update'
+			$("select[name='prodi_id']").val($(this).data('prodi_id')).trigger('change')
+			$("input[name='nim']").val($(this).data('nim'))
+			$("input[name='nama']").val($(this).data('nama'))
+			$("input[name='alamat']").val($(this).data('alamat'))
+			$("input[name='telp']").val($(this).data('telp'))
+		})
+
+		$(document).on('click','.delete',function(e){
+			nim = $(this).data('nim')
+			$.ajax({
+				url : 'delete_mahasiswa.php',
+				type : 'POST',
+				data : {
+					nim : nim
+				},
+			}).then(function(xhr){
+				getMhs()
+			})
+		})
+	</script>
+</body>
+</html>
